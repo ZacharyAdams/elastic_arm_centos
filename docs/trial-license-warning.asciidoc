@@ -1,0 +1,18 @@
+:current: 7.11
+:register: https://register.elastic.co
+:elasticdocs: https://www.elastic.co/guide/en/elasticsearch/reference/{current}
+:licenseexpiration: {kibana-ref}/managing-licenses.html#license-expiration
+
+[WARNING]
+--
+After the trial license period expires, the trial platinum features
+{licenseexpiration}[**operate in a degraded mode**].
+
+You should update your license as soon as possible. You are essentially flying blind
+when running with an expired license. The license can be updated at any point before
+or on expiration, using the {elasticdocs}/update-license.html[Update License API]
+or Kibana UI, if available in the version deployed.
+
+You can revert to a free perpetual basic license
+included with deployment by using the {elasticdocs}/start-basic.html[Start Basic API].
+--
