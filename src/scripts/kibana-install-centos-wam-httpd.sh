@@ -1,500 +1,610 @@
+#!/bin/bash
+
+# License: https://github.com/elastic/azure-marketplace/blob/master/LICENSE.txt
+#
+# Trent Swanson (Full Scale 180 Inc)
+# Martijn Laarman, Greg Marzouka, Russ Cam (Elastic)
+# Contributors
+#
+
+#########################
+# HELP
+#########################
+
+export DEBIAN_FRONTEND=noninteractive
+
+help()
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "esVersion": {
-      "value": "7.11.2"
-    },
-    "esClusterName": {
-      "value": "elastictest"
-    },
-    "azureCloudPlugin": {
-      "value": "No"
-    },
-    "azureCloudStorageAccountName": {
-      "value": ""
-    },
-    "azureCloudStorageAccountResourceGroup": {
-      "value": ""
-    },
-    "xpackPlugins": {
-      "value": "Yes"
-    },
-    "esAdditionalPlugins": {
-      "value": "analysis-phonetic"
-    },
-    "esAdditionalYaml": {
-      "value": ""
-    },
-    "esHttpCertBlob": {
-      "value": ""
-    },
-    "esHttpCertPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "esHttpCaCertBlob": {
-      "value": ""
-    },
-    "esHttpCaCertPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "esTransportCaCertBlob": {
-      "value": ""
-    },
-    "esTransportCaCertPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "esTransportCertPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "samlMetadataUri": {
-      "value": ""
-    },
-    "samlServiceProviderUri": {
-      "value": ""
-    },
-    "esHeapSize": {
-      "value": 0
-    },
-    "loadBalancerType": {
-      "value": "external"
-    },
-    "vNetNewOrExisting": {
-      "value": "existing"
-    },
-    "vNetName": {
-      "value": "es7d-vnet-dev"
-    },
-    "vNetClusterSubnetName": {
-      "value": "es-subnet"
-    },
-    "vNetLoadBalancerIp": {
-      "value": "10.74.0.4"
-    },
-    "vNetExistingResourceGroup": {
-      "value": "VDMRes-VADevES7xd"
-    },
-    "vNetNewAddressPrefix": {
-      "value": "10.74.0.0/24"
-    },
-    "vNetNewClusterSubnetAddressPrefix": {
-      "value": "10.74.0.0/25"
-    },
-    "vNetAppGatewaySubnetName": {
-      "value": "es-gateway-subnet"
-    },
-    "vNetNewAppGatewaySubnetAddressPrefix": {
-      "value": "10.0.0.128/28"
-    },
-    "kibana": {
-      "value": "Yes"
-    },
-    "vmSizeKibana": {
-      "value": "Standard_DS1_v2"
-    },
-    "vmKibanaAcceleratedNetworking": {
-      "value": "Default"
-    },
-    "kibanaKeyBlob": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "kibanaCertBlob": {
-      "value": ""
-    },
-    "kibanaKeyPassphrase": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "kibanaAdditionalYaml": {
-      "value": ""
-    },
-    "logstash": {
-      "value": "No"
-    },
-    "vmLogstashAcceleratedNetworking": {
-      "value": "Default"
-    },
-    "logstashHeapSize": {
-      "value": 0
-    },
-    "logstashKeystorePassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "logstashAdditionalYaml": {
-      "value": ""
-    },
-    "jumpbox": {
-      "value": "No"
-    },
-    "vmSizeDataNodes": {
-      "value": "Standard_DS1_v2"
-    },
-    "vmDataNodeAcceleratedNetworking": {
-      "value": "Default"
-    },
-    "vmDataDiskCount": {
-      "value": 1
-    },
-    "vmDataDiskSize": {
-      "value": "1TiB"
-    },
-    "vmDataNodeCount": {
-      "value": 3
-    },
-    "storageAccountType": {
-      "value": "Default"
-    },
-    "dataNodesAreMasterEligible": {
-      "value": "Yes"
-    },
-    "vmHostNamePrefix": {
-      "value": "es7d"
-    },
-    "vmMasterNodeAcceleratedNetworking": {
-      "value": "Default"
-    },
-    "vmClientNodeCount": {
-      "value": 1
-    },
-    "vmSizeClientNodes": {
-      "value": "Standard_D1_v2"
-    },
-    "vmClientNodeAcceleratedNetworking": {
-      "value": "Default"
-    },
-    "adminUsername": {
-      "value": "localadmin"
-    },
-    "authenticationType": {
-      "value": "password"
-    },
-    "adminPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityBootstrapPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityApmPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityAdminPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityReadPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityKibanaPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityLogstashPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityRemoteMonitoringPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "securityBeatsPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "appGatewayTier": {
-      "value": "Standard"
-    },
-    "appGatewaySku": {
-      "value": "Small"
-    },
-    "appGatewayCount": {
-      "value": 1
-    },
-    "appGatewayCertBlob": {
-      "value": ""
-    },
-    "appGatewayCertPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "deploypass"
-      }
-    },
-    "appGatewayEsHttpCertBlob": {
-      "value": ""
-    },
-    "appGatewayWafStatus": {
-      "value": "Disabled"
-    },
-    "appGatewayWafMode": {
-      "value": "Detection"
-    },
-    "location": {
-      "value": "usgovvirginia"
-    },
-    "ExistingImageResourceGroupName": {
-      "value": "VDMRes-VADevSPEL",
-      "metadata": {
-        "description": "Resource Group containing the existing image to use for VMs"
-      }
-    },
-    "ExistingImageName": {
-      "value": "spel-minimal-centos-7-azure-image-2021.03.rc1",
-      "metadata": {
-        "description": "Name of the Image to use for VMs"
-      }
-    },
-    "OMSWorkSpaceId": {
-      "value": "2f0ef614-6520-40c5-911c-a18effa5aa95",
-      "metadata": {
-        "description": "OMS Workspace ID"
-      }
-    },
-    "OMSWorkSpaceKey": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "erikomskey"
-      }
-    },
-    "installTrendYN": {
-      "value": "no",
-      "metadata": {
-        "description": "Should this install Trend agent to the VMs"
-      }
-    },
-    "TrendRPMURL": {
-      "value": "https://10.33.0.20:4119/software/agent/RedHat_EL7/x86_64/",
-      "metadata": {
-        "description": "URL from which to download the EL7 Trend Micro Deep Security agent RPM"
-      }
-    },
-    "TrendMgrHostname": {
-      "value": "10.33.0.20",
-      "metadata": {
-        "description": "Hostname or IP of the Trend Micro Deep Security Manager server to link to (e.g. trend.example.com)."
-      }
-    },
-    "TrendPolicyID": {
-      "value": "3",
-      "metadata": {
-        "description": "Policy ID with which to associate the new Trend Micro Deep Security agent"
-      }
-    },
-    "installNessusYN": {
-      "value": "no",
-      "metadata": {
-        "description": "Should this install Nessus agent to the VMs"
-      }
-    },
-    "NessusRPMURL": {
-      "value": "https://vsmstoreprod2general01.file.core.usgovcloudapi.net/ddtcsecurity/Binaries/latest/rhel-nessus-agent.rpm",
-      "metadata": {
-        "description": "Insecure URL from which to download the EL7 Nessus agent RPM."
-      }
-    },
-    "NessusRPMURLSharedAccessSignature": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagenessussas"
-      }
-    },
-    "NessusMgrHostname": {
-      "value": "10.33.0.6",
-      "metadata": {
-        "description": "Hostname or IP of the Nessus Manager server to link to (e.g. nessus.example.com)."
-      }
-    },
-    "NessusMgrKey": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagenessuskey"
-      }
-    },
-    "NessusGroups": {
-      "value": "RHEL7",
-      "metadata": {
-        "description": "Existing Agent Group(s) that you want your Agent to be a member of"
-      }
-    },
-    "WAMConfURL": {
-      "value": "https://erikdiagstorageacct.file.core.usgovcloudapi.net/certs/config.yaml",
-      "metadata": {
-        "description": "Custom conf.yaml file to use with Watchmaker"
-      }
-    },
-    "WAMConfURLSharedAccessSignature": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagecapubcertsas"
-      }
-    },
-    "WAMCustomSaltURL": {
-      "value": "https://erikdiagstorageacct.file.core.usgovcloudapi.net/certs/salt-content-20210316.zip",
-      "metadata": {
-        "description": "URL to Custom salt-content.zip"
-      }
-    },
-    "WAMCustomSaltURLSharedAccessSignature": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagecapubcertsas"
-      }
-    },
-    "DomainDNSServerIP1": {
-      "value": "10.33.0.4",
-      "metadata": {
-        "description": "IP address of domain DNS server to be used for domain join"
-      }
-    },
-    "DomainDNSServerIP2": {
-      "value": "10.33.0.5",
-      "metadata": {
-        "description": "IP address of domain DNS server to be used for domain join"
-      }
-    },
-    "DomainDNSdomainsuffix": {
-      "value": "dstate.stage",
-      "metadata": {
-        "description": "DNS suffix of domain to be used for domain join"
-      }
-    },
-    "pubwatchmakerpinnedversion": {
-      "value": "0.21.8",
-      "metadata": {
-        "description": "Version of Watchmaker to which to pin install"
-      }
-    },
-    "KibanaLDAPSCertURL": {
-      "value": "https://erikdiagstorageacct.file.core.usgovcloudapi.net/certs/vsmvms-caroot01-pub.cer",
-      "metadata": {
-        "description": "URL to LDAPS Public cert to be used on Kibana node"
-      }
-    },
-    "KibanaLDAPSCertURLSharedAccessSignature": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagecapubcertsas"
-      }
-    },
-    "KibanaEnvContentURL": {
-      "value": "https://erikdiagstorageacct.file.core.usgovcloudapi.net/certs/content.zip",
-      "metadata": {
-        "description": "URL to the Environment Content zip file to be used on Kibana node"
-      }
-    },
-    "KibanaEnvContentURLSharedAccessSignature": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagecapubcertsas"
-      }
-    },
-    "KibanaLDAPGroupDN": {
-      "value": "cn=dStateKibanaAccess,ou=dState Groups,dc=dstate,dc=stage",
-      "metadata": {
-        "description": "LDAP DN of the group of users to be granted access to Kibana"
-      }
-    },
-    "NameSynonymsURL": {
-      "value": "https://erikdiagstorageacct.file.core.usgovcloudapi.net/certs/name_synonyms.txt",
-      "metadata": {
-        "description": "URL to the Environment Content zip file to be used on Kibana node"
-      }
-    },
-    "NameSynonymsURLSharedAccessSignature": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/06f70219-4460-452c-8719-7a92c733d7d4/resourceGroups/ErikResourceGroup/providers/Microsoft.KeyVault/vaults/templatetesting"
-        },
-        "secretName": "stagecapubcertsas"
-      }
-    }
-  }
+    echo "This script installs kibana on a dedicated VM in the elasticsearch ARM template cluster"
+    echo ""
+    echo "Options:"
+    echo "    -n      elasticsearch cluster name"
+    echo "    -v      kibana version e.g 6.4.1"
+    echo "    -u      elasticsearch url e.g. http://10.0.0.4:9200"
+    echo "    -l      install X-Pack plugin (<6.3.0) or apply trial license for Platinum features (6.3.0+)"
+    echo "    -S      kibana password"
+    echo "    -C      kibana cert to encrypt communication between the browser and Kibana"
+    echo "    -K      kibana key to encrypt communication between the browser and Kibana"
+    echo "    -P      kibana key passphrase to decrypt the private key (optional as the key may not be encrypted)"
+    echo "    -Y      <yaml\nyaml> additional yaml configuration"
+    echo "    -H      base64 encoded PKCS#12 archive (.p12/.pfx) containing the key and certificate used to secure Elasticsearch HTTP layer"
+    echo "    -G      Password for PKCS#12 archive (.p12/.pfx) containing the key and certificate used to secure Elasticsearch HTTP layer"
+    echo "    -V      base64 encoded PKCS#12 archive (.p12/.pfx) containing the CA key and certificate used to secure Elasticsearch HTTP layer"
+    echo "    -J      Password for PKCS#12 archive (.p12/.pfx) containing the CA key and certificate used to secure Elasticsearch HTTP layer"
+    echo "    -U      Public domain name (and optional port) for this instance of Kibana to configure SAML Single-Sign-On"
+    echo "    -h      view this help content"
 }
+
+# Custom logging with time so we can easily relate running times, also log to separate file so order is guaranteed.
+# The Script extension output the stdout/err buffer in intervals with duplicates.
+log()
+{
+    echo \[$(date +%d%m%Y-%H:%M:%S)\] "$1"
+    echo \[$(date +%d%m%Y-%H:%M:%S)\] "$1" >> /var/log/arm-install.log
+}
+
+log "Begin execution of Kibana script extension on ${HOSTNAME}"
+START_TIME=$SECONDS
+
+#########################
+# Preconditions
+#########################
+
+if [ "${UID}" -ne 0 ];
+then
+    log "Script executed without root permissions"
+    echo "You must be root to run this program." >&2
+    exit 3
+fi
+
+#########################
+# Parameter handling
+#########################
+
+#Script Parameters
+CLUSTER_NAME="elasticsearch"
+KIBANA_VERSION="6.4.1"
+#Default internal load balancer ip
+ELASTICSEARCH_URL="http://10.0.0.4:9200"
+INSTALL_XPACK=0
+BASIC_SECURITY=0
+USER_KIBANA_PWD="changeme"
+SSL_CERT=""
+SSL_KEY=""
+SSL_PASSPHRASE=""
+YAML_CONFIGURATION=""
+HTTP_CERT=""
+HTTP_CERT_PASSWORD=""
+HTTP_CACERT=""
+HTTP_CACERT_PASSWORD=""
+SAML_SP_URI=""
+
+#Loop through options passed
+while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:lh optname; do
+  log "Option $optname set"
+  case $optname in
+    n) #set cluster name
+      CLUSTER_NAME="${OPTARG}"
+      ;;
+    v) #kibana version number
+      KIBANA_VERSION="${OPTARG}"
+      ;;
+    u) #elasticsearch url
+      ELASTICSEARCH_URL="${OPTARG}"
+      ;;
+    S) #security kibana pwd
+      USER_KIBANA_PWD="${OPTARG}"
+      ;;
+    l) #install X-Pack
+      INSTALL_XPACK=1
+      ;;
+    C) #kibana ssl cert
+      SSL_CERT="${OPTARG}"
+      ;;
+    K) #kibana ssl key
+      SSL_KEY="${OPTARG}"
+      ;;
+    P) #kibana ssl key passphrase
+      SSL_PASSPHRASE="${OPTARG}"
+      ;;
+    H) #Elasticsearch certificate
+      HTTP_CERT="${OPTARG}"
+      ;;
+    G) #Elasticsearch certificate password
+      HTTP_CERT_PASSWORD="${OPTARG}"
+      ;;
+    V) #Elasticsearch CA certificate
+      HTTP_CACERT="${OPTARG}"
+      ;;
+    J) #Elasticsearch CA certificate password
+      HTTP_CACERT_PASSWORD="${OPTARG}"
+      ;;
+    U) #Service Provider URI
+      SAML_SP_URI="${OPTARG}"
+      ;;
+    Y) #kibana additional yml configuration
+      YAML_CONFIGURATION="${OPTARG}"
+      ;;
+    h) #show help
+      help
+      exit 2
+      ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
+      help
+      exit 2
+      ;;
+  esac
+done
+
+#########################
+# Parameter state changes
+#########################
+
+  BASIC_SECURITY=1
+
+log "installing Kibana $KIBANA_VERSION for Elasticsearch cluster: $CLUSTER_NAME"
+log "installing X-Pack plugins is set to: $INSTALL_XPACK"
+log "basic security is set to: $BASIC_SECURITY"
+log "Kibana will talk to Elasticsearch over $ELASTICSEARCH_URL"
+#########################
+# Installation steps as functions
+#########################
+random_password()
+{ 
+  < /dev/urandom tr -dc '!@#$%_A-Z-a-z-0-9' | head -c${1:-64}
+  echo
+}
+
+keystore_cmd()
+{
+
+    sudo -u kibana /usr/share/kibana/bin/kibana-keystore "$@"
+
+}
+
+create_keystore_if_not_exists()
+{
+
+  local KEYSTORE_FILE=/etc/kibana/kibana.keystore
+
+  if [[ -f $KEYSTORE_FILE ]]; then 
+    log "[create_keystore_if_not_exists] kibana.keystore exists at $KEYSTORE_FILE"
+  else
+    log "[create_keystore_if_not_exists] create kibana.keystore"
+    keystore_cmd create
+  fi
+}
+install_kibana()
+{
+    local PACKAGE="kibana-$KIBANA_VERSION-x86_64.rpm"
+    local ALGORITHM="512"
+#Removing check because will always be above 6
+#    if dpkg --compare-versions "$KIBANA_VERSION" "lt" "5.6.2"; then
+#      ALGORITHM="1"
+#    fi
+
+    local SHASUM="$PACKAGE.sha$ALGORITHM"
+    local DOWNLOAD_URL="https://artifacts.elastic.co/downloads/kibana/$PACKAGE?ultron=msft&gambit=azure"
+    local SHASUM_URL="https://artifacts.elastic.co/downloads/kibana/$SHASUM?ultron=msft&gambit=azure"
+
+    log "[install_kibana] download Kibana $KIBANA_VERSION"
+    wget --retry-connrefused --waitretry=1 -q "$SHASUM_URL" -O $SHASUM
+    local EXIT_CODE=$?
+    if [[ $EXIT_CODE -ne 0 ]]; then
+        log "[install_kibana] error downloading Kibana $KIBANA_VERSION sha$ALGORITHM checksum"
+        exit $EXIT_CODE
+    fi
+    log "[install_kibana] download location $DOWNLOAD_URL"
+    wget --retry-connrefused --waitretry=1 -q "$DOWNLOAD_URL" -O $PACKAGE
+    EXIT_CODE=$?
+    if [[ $EXIT_CODE -ne 0 ]]; then
+        log "[install_kibana] error downloading Kibana $KIBANA_VERSION"
+        exit $EXIT_CODE
+    fi
+    log "[install_kibana] downloaded Kibana $KIBANA_VERSION"
+
+    # earlier sha files do not contain the package name. add it
+    grep -q "$PACKAGE" $SHASUM || sed -i "s/.*/&  $PACKAGE/" $SHASUM
+
+    shasum -a $ALGORITHM -c $SHASUM
+    EXIT_CODE=$?
+    if [[ $EXIT_CODE -ne 0 ]]; then
+        log "[install_kibana] error validating checksum for Kibana $KIBANA_VERSION"
+        exit $EXIT_CODE
+    fi
+
+    log "[install_kibana] installing Kibana $KIBANA_VERSION"
+    rpm --install $PACKAGE
+    log "[install_kibana] installed Kibana $KIBANA_VERSION"
+}
+
+## Security
+##----------------------------------
+
+configure_kibana_yaml()
+{
+    local KIBANA_CONF=/etc/kibana/kibana.yml
+    local SSL_PATH=/etc/kibana/ssl
+    # backup the current config
+    mv $KIBANA_CONF $KIBANA_CONF.bak
+
+    log "[configure_kibana_yaml] Configuring kibana.yml"
+
+    # set the elasticsearch URL
+    echo "elasticsearch.hosts: [\"$ELASTICSEARCH_URL\"]" >> $KIBANA_CONF
+    echo "server.host: $(hostname -i)" >> $KIBANA_CONF
+    # specify kibana log location
+    echo "logging.dest: /var/log/kibana/kibana.log" >> $KIBANA_CONF
+    mkdir /var/log/kibana
+    chown kibana:kibana /var/log/kibana
+    touch /var/log/kibana.log
+    chown kibana:kibana /var/log/kibana.log
+
+    # set logging to quiet by default. Note that kibana does not have
+    # a log file rotation policy, so the log file should be monitored
+    echo "logging.quiet: true" >> $KIBANA_CONF
+
+   # configure security
+    local ENCRYPTION_KEY
+
+    if [[ ${INSTALL_XPACK} -ne 0 || ${BASIC_SECURITY} -ne 0 ]]; then
+      local KIBANA_USER="kibana_system"
+      echo "elasticsearch.username: $KIBANA_USER" >> $KIBANA_CONF
+
+      # store credentials in the keystore
+      create_keystore_if_not_exists
+      log "[configure_kibana_yaml] Adding elasticsearch.password to kibana.keystore"
+      echo "# elasticsearch.password added to kibana.keystore" >> $KIBANA_CONF
+      echo "$USER_KIBANA_PWD" | keystore_cmd add "elasticsearch.password" --stdin --force
+
+      ENCRYPTION_KEY=$(random_password)
+      echo "xpack.security.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
+      log "[configure_kibana_yaml] X-Pack Security encryption key generated"
+    fi
+
+    # install x-pack
+    if [ ${INSTALL_XPACK} -ne 0 ]; then
+      ENCRYPTION_KEY=$(random_password)
+      echo "xpack.reporting.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
+      log "[configure_kibana_yaml] X-Pack Reporting encryption key generated"
+
+      #if dpkg --compare-versions "$KIBANA_VERSION" "lt" "6.3.0"; then
+      #  log "[configure_kibana_yaml] Installing X-Pack plugin"
+      #  /usr/share/kibana/bin/kibana-plugin install x-pack
+        log "[configure_kibana_yaml] Installed X-Pack plugin"
+      #fi
+    fi
+
+    # configure HTTPS if cert and private key supplied
+    if [[ -n "${SSL_CERT}" && -n "${SSL_KEY}" ]]; then
+      [ -d $SSL_PATH ] || mkdir -p $SSL_PATH
+      log "[configure_kibana_yaml] Save kibana cert to file"
+      echo ${SSL_CERT} | base64 -d | tee $SSL_PATH/kibana.crt
+      log "[configure_kibana_yaml] Save kibana key to file"
+      echo ${SSL_KEY} | base64 -d | tee $SSL_PATH/kibana.key
+
+      log "[configure_kibana_yaml] Configuring SSL/TLS to Kibana"
+      echo "server.ssl.enabled: true" >> $KIBANA_CONF
+      echo "server.ssl.key: $SSL_PATH/kibana.key" >> $KIBANA_CONF
+      echo "server.ssl.certificate: $SSL_PATH/kibana.crt" >> $KIBANA_CONF
+      if [[ -n "${SSL_PASSPHRASE}" ]]; then
+          log "[configure_kibana_yaml] Adding server.ssl.keyPassphrase to kibana.keystore"
+          create_keystore_if_not_exists
+          echo "# server.ssl.keyPassphrase added to kibana.keystore" >> $KIBANA_CONF
+          echo "$SSL_PASSPHRASE" | keystore_cmd add "server.ssl.keyPassphrase" --stdin --force
+      fi
+      log "[configure_kibana_yaml] Configured SSL/TLS to Kibana"
+    fi
+
+    # configure HTTPS communication with Elasticsearch if cert supplied and x-pack installed.
+    # Kibana x-pack installed implies it's also installed for Elasticsearch
+    local INSTALL_CERTS=0
+    if [[ ${INSTALL_XPACK} -ne 0 || ${BASIC_SECURITY} -ne 0 ]]; then
+      INSTALL_CERTS=1
+    fi
+
+    if [[ -n "${HTTP_CERT}" || -n "${HTTP_CACERT}" && ${INSTALL_CERTS} -ne 0 ]]; then
+      [ -d $SSL_PATH ] || mkdir -p $SSL_PATH
+
+      if [[ -n "${HTTP_CERT}" ]]; then
+        # convert PKCS#12 certificate to PEM format
+        log "[configure_kibana_yaml] Save PKCS#12 archive for Elasticsearch HTTP to file"
+        echo ${HTTP_CERT} | base64 -d | tee $SSL_PATH/elasticsearch-http.p12
+        log "[configure_kibana_yaml] Extract CA cert from PKCS#12 archive for Elasticsearch HTTP"
+        echo "$HTTP_CERT_PASSWORD" | openssl pkcs12 -in $SSL_PATH/elasticsearch-http.p12 -out $SSL_PATH/elasticsearch-http-ca.crt -cacerts -nokeys -chain -passin stdin
+
+        log "[configure_kibana_yaml] Configuring TLS for Elasticsearch"
+        if [[ $(stat -c %s $SSL_PATH/elasticsearch-http-ca.crt 2>/dev/null) -eq 0 ]]; then
+            log "[configure_kibana_yaml] No CA cert extracted from HTTP cert. Setting verification mode to none"
+            echo "elasticsearch.ssl.verificationMode: none" >> $KIBANA_CONF
+        else
+            log "[configure_kibana_yaml] CA cert extracted from HTTP PKCS#12 archive. Setting verification mode to certificate"
+            echo "elasticsearch.ssl.verificationMode: certificate" >> $KIBANA_CONF
+            echo "elasticsearch.ssl.certificateAuthorities: [ $SSL_PATH/elasticsearch-http-ca.crt ]" >> $KIBANA_CONF
+        fi
+
+      else
+
+        # convert PKCS#12 CA certificate to PEM format
+        local HTTP_CACERT_FILENAME=elasticsearch-http-ca.p12
+        log "[configure_kibana_yaml] Save PKCS#12 archive for Elasticsearch HTTP CA to file"
+        echo ${HTTP_CACERT} | base64 -d | tee $SSL_PATH/$HTTP_CACERT_FILENAME
+        log "[configure_kibana_yaml] Convert PKCS#12 archive for Elasticsearch HTTP CA to PEM format"
+        echo "$HTTP_CACERT_PASSWORD" | openssl pkcs12 -in $SSL_PATH/$HTTP_CACERT_FILENAME -out $SSL_PATH/elasticsearch-http-ca.crt -clcerts -nokeys -chain -passin stdin
+
+        log "[configure_kibana_yaml] Configuring TLS for Elasticsearch"
+        if [[ $(stat -c %s $SSL_PATH/elasticsearch-http-ca.crt 2>/dev/null) -eq 0 ]]; then
+            log "[configure_kibana_yaml] No CA cert extracted from HTTP CA. Setting verification mode to none"
+            echo "elasticsearch.ssl.verificationMode: none" >> $KIBANA_CONF
+        else
+            log "[configure_kibana_yaml] CA cert extracted from HTTP CA PKCS#12 archive. Setting verification mode to full"
+            echo "elasticsearch.ssl.verificationMode: full" >> $KIBANA_CONF
+            log "[configure_kibana_yaml] Set CA cert in certificate authorities"
+            echo "elasticsearch.ssl.certificateAuthorities: [ $SSL_PATH/elasticsearch-http-ca.crt ]" >> $KIBANA_CONF
+        fi
+      fi
+      chown -R kibana: $SSL_PATH
+      log "[configure_kibana_yaml] Configured TLS for Elasticsearch"
+    fi
+
+    # Configure SAML Single-Sign-On
+    if [[ -n "$SAML_SP_URI" && ${INSTALL_XPACK} -ne 0 ]]; then
+      log "[configure_kibana_yaml] Configuring Kibana for SAML Single-Sign-On"
+        echo "xpack.security.authc.providers.saml.saml1.order: 0" >> $KIBANA_CONF
+        echo "xpack.security.authc.providers.saml.saml1.realm: \"saml_aad\"" >> $KIBANA_CONF
+        echo "xpack.security.authc.providers.saml.saml1.description: \"Log in with Azure\"" >> $KIBANA_CONF
+        echo "xpack.security.authc.providers.saml.saml1.icon: \"logoAzure\"" >> $KIBANA_CONF
+        echo "xpack.security.authc.providers.basic.basic1.order: 1" >> $KIBANA_CONF
+      # Allow both saml and basic realms
+
+      log "[configure_kibana_yaml] Configured Kibana for SAML Single-Sign-On"
+    fi
+
+    # Additional yaml configuration
+    if [[ -n "$YAML_CONFIGURATION" ]]; then
+        log "[configure_kibana_yaml] include additional yaml configuration"
+        local SKIP_LINES="elasticsearch.username elasticsearch.password "
+        SKIP_LINES+="server.ssl.key server.ssl.cert server.ssl.enabled "
+        SKIP_LINES+="xpack.security.encryptionKey xpack.reporting.encryptionKey "
+        SKIP_LINES+="elasticsearch.url server.host logging.dest logging.silent "
+        SKIP_LINES+="elasticsearch.ssl.certificate elasticsearch.ssl.key elasticsearch.ssl.certificateAuthorities "
+        SKIP_LINES+="elasticsearch.ssl.ca elasticsearch.ssl.keyPassphrase elasticsearch.ssl.verify "
+        SKIP_LINES+="xpack.security.authProviders server.xsrf.whitelist "
+        SKIP_LINES+="xpack.security.public.protocol xpack.security.public.hostname xpack.security.public.port "
+        SKIP_LINES+="xpack.security.authc.providers.saml.saml1.order xpack.security.authc.providers.saml.saml1.realm "
+        SKIP_LINES+="xpack.security.authc.providers.saml.saml1.description xpack.security.authc.providers.basic.basic1.order "
+        SKIP_LINES+="xpack.security.authc.providers.saml.saml1.icon "
+        local SKIP_REGEX="^\s*("$(echo $SKIP_LINES | tr " " "|" | sed 's/\./\\\./g')")"
+        IFS=$'\n'
+        for LINE in $(echo -e "$YAML_CONFIGURATION"); do
+          if [[ -n "$LINE" ]]; then
+              if [[ $LINE =~ $SKIP_REGEX ]]; then
+                  log "[configure_kibana_yaml] Skipping line '$LINE'"
+              else
+                  log "[configure_kibana_yaml] Adding line '$LINE' to $KIBANA_CONF"
+                  echo "$LINE" >> $KIBANA_CONF
+              fi
+          fi
+        done
+        unset IFS
+        log "[configure_kibana_yaml] included additional yaml configuration"
+        log "[configure_kibana_yaml] run yaml lint on configuration"
+        install_yamllint
+        LINT=$(yamllint -d "{extends: relaxed, rules: {key-duplicates: {level: error}}}" $KIBANA_CONF; exit ${PIPESTATUS[0]})
+        EXIT_CODE=$?
+        log "[configure_kibana_yaml] ran yaml lint (exit code $EXIT_CODE) $LINT"
+        if [[ $EXIT_CODE -ne 0 ]]; then
+            log "[configure_kibana_yaml] errors in yaml configuration. exiting"
+            exit 11
+        fi
+    fi
+}
+
+install_apt_package()
+{
+  local PACKAGE=$1
+  if [ $(dpkg-query -W -f='${Status}' $PACKAGE 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+    log "[install_$PACKAGE] installing $PACKAGE"
+    (apt-get -yq install $PACKAGE || (sleep 15; apt-get -yq install $PACKAGE))
+    log "[install_$PACKAGE] installed $PACKAGE"
+  fi
+}
+
+install_yum_package()
+{
+  local PACKAGE=$1
+  QUERY=$(rpm -q $PACKAGE)
+  if [[ $QUERY == *$PACKAGE* ]] && [[ $QUERY == *not* ]]; then
+    log "[install_$PACKAGE] installing $PACKAGE"
+    (yum -y install $PACKAGE || (sleep 15; yum -y install $PACKAGE))
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      log "[install_$PACKAGE] failed to install $PACKAGE"
+      exit 1
+    fi
+    log "[install_$PACKAGE] installed $PACKAGE"
+  fi
+}
+
+#added
+install_wget()
+{
+    install_yum_package wget
+}
+
+#added
+install_epel()
+{
+    install_yum_package epel-release
+}
+
+#added for shasum
+install_perl_Digest_SHA()
+{
+    install_yum_package perl-Digest-SHA
+}
+
+install_pwgen()
+{
+    install_yum_package pwgen
+}
+
+install_yamllint()
+{
+    install_yum_package yamllint
+}
+
+configure_systemd()
+{
+    log "[configure_systemd] configure systemd to start Kibana service automatically when system boots"
+    systemctl daemon-reload
+    systemctl enable kibana.service
+}
+
+start_systemd()
+{
+    log "[start_systemd] starting Kibana"
+    systemctl start kibana.service
+    log "[start_systemd] started Kibana"
+}
+
+firewall_ports()
+{
+    log "[firewall_ports] starting and enabling firewalld"
+    systemctl start firewalld.service
+    systemctl enable firewalld.service
+    if [ ${INSTALL_XPACK} -eq 0 ]; then
+      #if not installing xpack only open firewall port for subnet IPs and azure load balancer
+      log "[firewall_ports] setting up firewall ports from subnet and azure load balancer source IPs"
+      thissubnet=$(ip -o -f inet addr show | awk '/scope global/ {print $4}')
+      firewall-cmd --permanent --new-ipset=thissubnetandlb --type=hash:net
+      firewall-cmd --permanent --ipset=thissubnetandlb --add-entry=$thissubnet
+      firewall-cmd --permanent --ipset=thissubnetandlb --add-entry=168.63.129.16
+      firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset=thissubnetandlb port protocol="tcp" port="5601" accept'
+    else 
+      log "[firewall_ports] setting up firewall ports from all source IPs"
+      firewall-cmd --zone=public --add-port=5601/tcp
+      firewall-cmd --zone=public --permanent --add-port=5601/tcp
+    fi
+
+    log "[firewall_ports] firewall ports opened"
+}
+
+# Set Static DNS after cluster startup but before WAM run for domain join
+# script contents to be modified by arm template before execution
+set_static_dns()
+{
+  bash set-static-dns.sh
+}
+
+#watchmaker_hardening()
+# {
+#    log "[watchmaker_hardening] running watchmaker for hardening"
+#    yum -y install epel-release 
+#    # Install pip
+#    yum -y --enablerepo=epel install python-pip wget 
+#    # Install setup dependencies for python 2.x (removed ver dep for pip, others from readthedocs re 2.6, not sure if applicable to 2.7)
+#    pip install --upgrade "pip<20" "wheel<0.30.0" "setuptools<37"
+#    # Install Watchmaker
+#    pip install --upgrade watchmaker 
+#    # Setup terminal support for UTF-8
+#    export LC_ALL=en_US.UTF-8
+#    export LANG=en_US.UTF-8
+#    # Run Watchmaker
+#    watchmaker --no-reboot --log-level debug --log-dir=/var/log/watchmaker --config=/usr/lib/python2.7/site-packages/watchmaker/static/config.yaml
+#    if [ $? -ne 0 ]; then
+#        log "watchmaker didn't run correctly, exit"
+#        exit 1
+#    fi
+#    log "[watchmaker_hardening] disabling fips mode for azure linux agent and extensions"
+#    salt-call --local ash.fips_disable
+# }
+
+# kibana_httpd_self_signed_cert()
+# {
+#    #configure self signed ssl cert on httpd for reverse proxy to kibana
+#    if [ "${CONF_APACHE_HTTPD}" -ne 0 ]; then
+#        log "[kibana_httpd_self_signed_cert] Configure kibana for httpd reverse proxy using self signed ssl cert"
+#        bash httpdrevproxyselfsigned.sh -P 5601
+#        systemctl enable httpd
+#        #assumes client node also using self signed cert, configuring if switching which port to connect to es on
+#        echo "elasticsearch.ssl.verify: false" >> /etc/kibana/kibana.yml
+#    fi
+# }
+
+# kibana_httpd_ldaps_auth()
+# {
+#    #configure kibana httpd for ldaps authentication
+#    if [ "${CONF_APACHE_HTTPD}" -ne 0 ]; then
+#        log "[kibana_httpd_self_signed_cert] Configure kibana for ldaps authentication"
+#        bash kibananodeldapsauth.sh -C "${APACHE_LDAPS_CERT}" -E "${APACHE_ENV_CONTENT_URL}" -G "${APACHE_LDAP_GROUP_DN}"
+#        systemctl enable httpd
+#        systemctl restart httpd
+#    fi
+#}
+
+update_and_reboot_in_2_min()
+{
+    log "[update_and_reboot_in_2_min] prep for yum update"
+    (
+        printf "yum -y update\n"
+        printf "shutdown -r now\n"
+    ) > /root/update.sh
+    chmod 700 /root/update.sh
+    yum -y install at
+    service atd start
+    log "[update_and_reboot_in_2_min] run yum update in 2 min and then reboot"
+    at now + 2 minutes -f /root/update.sh
+}
+
+#########################
+# Installation sequence
+#########################
+
+# if kibana is already installed assume this is a redeploy
+# change yaml configuration and only restart the server when needed
+if systemctl -q is-active kibana.service; then
+
+  configure_kibana_yaml
+
+  # restart kibana if the configuration has changed
+  cmp --silent /etc/kibana/kibana.yml /etc/kibana/kibana.yml.bak \
+    || systemctl reload-or-restart kibana.service
+
+  exit 0
+fi
+
+#log "[apt-get] updating apt-get"
+#(apt-get -y update || (sleep 15; apt-get -y update))
+#log "[apt-get] updated apt-get"
+
+install_wget
+
+install_epel
+
+install_perl_Digest_SHA
+
+install_kibana
+
+configure_kibana_yaml
+
+firewall_ports
+
+configure_systemd
+
+start_systemd
+
+set_static_dns
+
+# watchmaker_hardening
+
+#kibana_httpd_self_signed_cert
+
+#kibana_httpd_ldaps_auth
+
+update_and_reboot_in_2_min
+
+ELAPSED_TIME=$(($SECONDS - $START_TIME))
+PRETTY=$(printf '%dh:%dm:%ds\n' $(($ELAPSED_TIME/3600)) $(($ELAPSED_TIME%3600/60)) $(($ELAPSED_TIME%60)))
+log "End execution of Kibana script extension in ${PRETTY}"
