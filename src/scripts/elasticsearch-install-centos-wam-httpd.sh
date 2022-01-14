@@ -375,7 +375,8 @@ check_data_disk()
 # Install Elasticsearch
 install_es()
 {
-    local PACKAGE="elasticsearch-$ES_VERSION.rpm"
+    local OS_SUFFIX="-x86_64"
+    local PACKAGE="elasticsearch-${ES_VERSION}${OS_SUFFIX}.rpm"
     local ALGORITHM="512"
 #Removing check because will always be above 6
 #    if dpkg --compare-versions "$ES_VERSION" "lt" "5.6.2"; then
@@ -384,8 +385,8 @@ install_es()
 
     local SHASUM="$PACKAGE.sha$ALGORITHM"
     local DOWNLOAD_URL="https://artifacts.elastic.co/downloads/elasticsearch/$PACKAGE?ultron=msft&gambit=azure"
+    #local SHASUM_URL="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.11.2-x86_64.rpm.sha512?ultron=msft&gambit=azure"
     local SHASUM_URL="https://artifacts.elastic.co/downloads/elasticsearch/$SHASUM?ultron=msft&gambit=azure"
-
     log "[install_es] installing Elasticsearch $ES_VERSION"
     wget --retry-connrefused --waitretry=1 -q "$SHASUM_URL" -O $SHASUM
     local EXIT_CODE=$?
@@ -1263,15 +1264,15 @@ set_static_dns()
 #watchmaker_hardening()
 # {
 #    log "[watchmaker_hardening] running watchmaker for hardening"
-#    yum -y install epel-release 
+#   yum -y install epel-release 
 #    # Install pip
 #    yum -y --enablerepo=epel install python-pip wget 
 #    # Install setup dependencies for python 2.x (removed ver dep for pip, others from readthedocs re 2.6, not sure if applicable to 2.7)
-#    pip install --upgrade "pip<20" "wheel<0.30.0" "setuptools<37"
-#    # Install Watchmaker
-#    pip install --upgrade watchmaker 
-#    pip install --upgrade wheel
+#    python3 -m pip install --upgrade pip
+#    pip install setuptools
 #    pip install upgrade setuptools
+#    # Install Watchmaker
+#    python3 -m pip install watchmaker 
 #    # Setup terminal support for UTF-8
 #    export LC_ALL=en_US.UTF-8
 #    export LANG=en_US.UTF-8
