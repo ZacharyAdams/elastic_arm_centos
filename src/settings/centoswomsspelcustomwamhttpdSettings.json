@@ -115,8 +115,6 @@
       "[concat(parameters('templateBaseUrl'), 'scripts/vm-disk-utils-0.1.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/java-install-centos.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/jumpbox-centos-wam.sh')]",
-      "[concat(parameters('templateBaseUrl'), 'scripts/install-trend-agent.sh')]",
-      "[concat(parameters('templateBaseUrl'), 'scripts/install-nessus-agent.sh')]",
       "[concat(parameters('templateBaseUrl'), 'scripts/set-static-dns.sh')]"
     ],
     "centosSettings": {
