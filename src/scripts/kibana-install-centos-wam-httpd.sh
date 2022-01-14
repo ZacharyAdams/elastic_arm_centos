@@ -32,6 +32,11 @@ help()
     echo "    -V      base64 encoded PKCS#12 archive (.p12/.pfx) containing the CA key and certificate used to secure Elasticsearch HTTP layer"
     echo "    -J      Password for PKCS#12 archive (.p12/.pfx) containing the CA key and certificate used to secure Elasticsearch HTTP layer"
     echo "    -U      Public domain name (and optional port) for this instance of Kibana to configure SAML Single-Sign-On"
+    echo "    -a      install and configure httpd listening on 443 using self signed certificate as reverse proxy to kibana port 5601"
+    echo "    -c      url to ldaps public certificate (.cer) to use for httpd authentication, required if selecting -a"
+    echo "    -e      url environment content file to use for httpd authentication, required if selecting -a"
+    echo "    -g      ldap dn of group of users to be granted access to kibana via httpd, required if selecting -a"
+
     echo "    -h      view this help content"
 }
 
@@ -80,7 +85,7 @@ HTTP_CACERT_PASSWORD=""
 SAML_SP_URI=""
 
 #Loop through options passed
-while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:lh optname; do
+while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:c:e:g:lah optname; do
   log "Option $optname set"
   case $optname in
     n) #set cluster name
@@ -125,6 +130,18 @@ while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:lh optname; do
     Y) #kibana additional yml configuration
       YAML_CONFIGURATION="${OPTARG}"
       ;;
+    a) #configure httpd
+      CONF_APACHE_HTTPD=1
+      ;;
+    c) #url to ldaps public cert for httpd auth
+      APACHE_LDAPS_CERT=${OPTARG}
+      ;;
+    e) #environment content for httpd
+      APACHE_ENV_CONTENT_URL=${OPTARG}
+      ;;
+    g) #ldap group configured to auth to httpd
+      APACHE_LDAP_GROUP_DN=${OPTARG}
+      ;;
     h) #show help
       help
       exit 2
@@ -147,7 +164,20 @@ log "installing Kibana $KIBANA_VERSION for Elasticsearch cluster: $CLUSTER_NAME"
 log "installing X-Pack plugins is set to: $INSTALL_XPACK"
 log "basic security is set to: $BASIC_SECURITY"
 log "Kibana will talk to Elasticsearch over $ELASTICSEARCH_URL"
-
+if [[ "${CONF_APACHE_HTTPD}" == 1 ]]; then
+    if [ -z "${APACHE_LDAPS_CERT}" ]; then
+        echo "ERROR-Attempting to configure apache httpd, but did not provide ldaps public cert"
+        exit 1
+    fi
+    if [ -z "${APACHE_ENV_CONTENT_URL}" ]; then
+        echo "ERROR-Attempting to configure apache httpd, but did not provide url to env content"
+        exit 1
+    fi
+    if [ -z "${APACHE_LDAP_GROUP_DN}" ]; then
+        echo "ERROR-Attempting to configure apache httpd, but did not provide dn to ldap group"
+        exit 1
+    fi
+fi 
 #########################
 # Installation steps as functions
 #########################
