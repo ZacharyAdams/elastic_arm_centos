@@ -1386,8 +1386,6 @@ fi
 
 set_static_dns
 
-# watchmaker_hardening
-
 client_node_httpd_self_signed_cert
 
 update_and_reboot_in_2_min
