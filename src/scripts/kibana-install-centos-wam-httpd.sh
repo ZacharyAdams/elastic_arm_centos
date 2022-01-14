@@ -32,6 +32,10 @@ help()
     echo "    -V      base64 encoded PKCS#12 archive (.p12/.pfx) containing the CA key and certificate used to secure Elasticsearch HTTP layer"
     echo "    -J      Password for PKCS#12 archive (.p12/.pfx) containing the CA key and certificate used to secure Elasticsearch HTTP layer"
     echo "    -U      Public domain name (and optional port) for this instance of Kibana to configure SAML Single-Sign-On"
+    echo "    -a      install and configure httpd listening on 443 using self signed certificate as reverse proxy to kibana port 5601"
+    echo "    -c      url to ldaps public certificate (.cer) to use for httpd authentication, required if selecting -a"
+    echo "    -e      url environment content file to use for httpd authentication, required if selecting -a"
+    echo "    -g      ldap dn of group of users to be granted access to kibana via httpd, required if selecting -a"
     echo "    -h      view this help content"
 }
 
@@ -67,7 +71,6 @@ KIBANA_VERSION="6.4.1"
 #Default internal load balancer ip
 ELASTICSEARCH_URL="http://10.0.0.4:9200"
 INSTALL_XPACK=0
-BASIC_SECURITY=0
 USER_KIBANA_PWD="changeme"
 SSL_CERT=""
 SSL_KEY=""
@@ -78,9 +81,12 @@ HTTP_CERT_PASSWORD=""
 HTTP_CACERT=""
 HTTP_CACERT_PASSWORD=""
 SAML_SP_URI=""
+APACHE_LDAPS_CERT=""
+APACHE_ENV_CONTENT_URL=""
+APACHE_LDAP_GROUP_DN=""
 
 #Loop through options passed
-while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:lh optname; do
+while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:c:e:g:lah optname; do
   log "Option $optname set"
   case $optname in
     n) #set cluster name
@@ -125,6 +131,18 @@ while getopts :n:v:u:S:C:K:P:Y:H:G:V:J:U:lh optname; do
     Y) #kibana additional yml configuration
       YAML_CONFIGURATION="${OPTARG}"
       ;;
+    a) #configure httpd
+      CONF_APACHE_HTTPD=1
+      ;;
+    c) #url to ldaps public cert for httpd auth
+      APACHE_LDAPS_CERT=${OPTARG}
+      ;;
+    e) #environment content for httpd
+      APACHE_ENV_CONTENT_URL=${OPTARG}
+      ;;
+    g) #ldap group configured to auth to httpd
+      APACHE_LDAP_GROUP_DN=${OPTARG}
+      ;;
     h) #show help
       help
       exit 2
@@ -141,48 +159,38 @@ done
 # Parameter state changes
 #########################
 
-  BASIC_SECURITY=1
-
-log "installing Kibana $KIBANA_VERSION for Elasticsearch cluster: $CLUSTER_NAME"
-log "installing X-Pack plugins is set to: $INSTALL_XPACK"
-log "basic security is set to: $BASIC_SECURITY"
+log "Installing Kibana $KIBANA_VERSION for Elasticsearch cluster: $CLUSTER_NAME"
+log "Installing X-Pack plugins is set to: $INSTALL_XPACK"
 log "Kibana will talk to Elasticsearch over $ELASTICSEARCH_URL"
+
+#httpd parameter validation
+if [[ "${CONF_APACHE_HTTPD}" == 1 ]]; then
+    if [ -z "${APACHE_LDAPS_CERT}" ]; then
+        echo "ERROR-Attempting to configure apache httpd, but did not provide ldaps public cert"
+        exit 1
+    fi
+    if [ -z "${APACHE_ENV_CONTENT_URL}" ]; then
+        echo "ERROR-Attempting to configure apache httpd, but did not provide url to env content"
+        exit 1
+    fi
+    if [ -z "${APACHE_LDAP_GROUP_DN}" ]; then
+        echo "ERROR-Attempting to configure apache httpd, but did not provide dn to ldap group"
+        exit 1
+    fi
+fi 
+
 #########################
 # Installation steps as functions
 #########################
-random_password()
-{ 
-  < /dev/urandom tr -dc '!@#$%_A-Z-a-z-0-9' | head -c${1:-64}
-  echo
-}
 
-keystore_cmd()
-{
-
-    sudo -u kibana /usr/share/kibana/bin/kibana-keystore "$@"
-
-}
-
-create_keystore_if_not_exists()
-{
-
-  local KEYSTORE_FILE=/etc/kibana/kibana.keystore
-
-  if [[ -f $KEYSTORE_FILE ]]; then 
-    log "[create_keystore_if_not_exists] kibana.keystore exists at $KEYSTORE_FILE"
-  else
-    log "[create_keystore_if_not_exists] create kibana.keystore"
-    keystore_cmd create
-  fi
-}
 install_kibana()
 {
     local PACKAGE="kibana-$KIBANA_VERSION-x86_64.rpm"
     local ALGORITHM="512"
-#Removing check because will always be above 6
-#    if dpkg --compare-versions "$KIBANA_VERSION" "lt" "5.6.2"; then
-#      ALGORITHM="1"
-#    fi
+    #Removing check because will always be above 6
+    #if dpkg --compare-versions "$KIBANA_VERSION" "lt" "5.6.2"; then
+    #  ALGORITHM="1"
+    #fi
 
     local SHASUM="$PACKAGE.sha$ALGORITHM"
     local DOWNLOAD_URL="https://artifacts.elastic.co/downloads/kibana/$PACKAGE?ultron=msft&gambit=azure"
@@ -191,14 +199,14 @@ install_kibana()
     log "[install_kibana] download Kibana $KIBANA_VERSION"
     wget --retry-connrefused --waitretry=1 -q "$SHASUM_URL" -O $SHASUM
     local EXIT_CODE=$?
-    if [[ $EXIT_CODE -ne 0 ]]; then
+    if [ $EXIT_CODE -ne 0 ]; then
         log "[install_kibana] error downloading Kibana $KIBANA_VERSION sha$ALGORITHM checksum"
         exit $EXIT_CODE
     fi
     log "[install_kibana] download location $DOWNLOAD_URL"
     wget --retry-connrefused --waitretry=1 -q "$DOWNLOAD_URL" -O $PACKAGE
     EXIT_CODE=$?
-    if [[ $EXIT_CODE -ne 0 ]]; then
+    if [ $EXIT_CODE -ne 0 ]; then
         log "[install_kibana] error downloading Kibana $KIBANA_VERSION"
         exit $EXIT_CODE
     fi
@@ -209,7 +217,7 @@ install_kibana()
 
     shasum -a $ALGORITHM -c $SHASUM
     EXIT_CODE=$?
-    if [[ $EXIT_CODE -ne 0 ]]; then
+    if [ $EXIT_CODE -ne 0 ]; then
         log "[install_kibana] error validating checksum for Kibana $KIBANA_VERSION"
         exit $EXIT_CODE
     fi
@@ -232,40 +240,26 @@ configure_kibana_yaml()
     log "[configure_kibana_yaml] Configuring kibana.yml"
 
     # set the elasticsearch URL
-    echo "elasticsearch.hosts: [\"$ELASTICSEARCH_URL\"]" >> $KIBANA_CONF
-    echo "server.host: $(hostname -i)" >> $KIBANA_CONF
+    echo "elasticsearch.url: \"$ELASTICSEARCH_URL\"" >> $KIBANA_CONF
+    echo "server.host:" $(hostname -I) >> $KIBANA_CONF
     # specify kibana log location
-    echo "logging.dest: /var/log/kibana/kibana.log" >> $KIBANA_CONF
-    mkdir /var/log/kibana
-    chown kibana:kibana /var/log/kibana
+    echo "logging.dest: /var/log/kibana.log" >> $KIBANA_CONF
     touch /var/log/kibana.log
-    chown kibana:kibana /var/log/kibana.log
+    chown kibana: /var/log/kibana.log
 
-    # set logging to quiet by default. Note that kibana does not have
-    # a log file rotation policy, so the log file should be monitored
-    echo "logging.quiet: true" >> $KIBANA_CONF
-
-   # configure security
-    local ENCRYPTION_KEY
-
-    if [[ ${INSTALL_XPACK} -ne 0 || ${BASIC_SECURITY} -ne 0 ]]; then
-      local KIBANA_USER="kibana_system"
-      echo "elasticsearch.username: $KIBANA_USER" >> $KIBANA_CONF
-
-      # store credentials in the keystore
-      create_keystore_if_not_exists
-      log "[configure_kibana_yaml] Adding elasticsearch.password to kibana.keystore"
-      echo "# elasticsearch.password added to kibana.keystore" >> $KIBANA_CONF
-      echo "$USER_KIBANA_PWD" | keystore_cmd add "elasticsearch.password" --stdin --force
-
-      ENCRYPTION_KEY=$(random_password)
-      echo "xpack.security.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
-      log "[configure_kibana_yaml] X-Pack Security encryption key generated"
-    fi
+    # set logging to silent by default
+    echo "logging.silent: true" >> $KIBANA_CONF
 
     # install x-pack
     if [ ${INSTALL_XPACK} -ne 0 ]; then
-      ENCRYPTION_KEY=$(random_password)
+      echo "elasticsearch.username: kibana" >> $KIBANA_CONF
+      echo "elasticsearch.password: \"$USER_KIBANA_PWD\"" >> $KIBANA_CONF
+
+      install_pwgen
+      local ENCRYPTION_KEY=$(pwgen 64 1)
+      echo "xpack.security.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
+      log "[configure_kibana_yaml] X-Pack Security encryption key generated"
+      ENCRYPTION_KEY=$(pwgen 64 1)
       echo "xpack.reporting.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
       log "[configure_kibana_yaml] X-Pack Reporting encryption key generated"
 
@@ -289,22 +283,14 @@ configure_kibana_yaml()
       echo "server.ssl.key: $SSL_PATH/kibana.key" >> $KIBANA_CONF
       echo "server.ssl.certificate: $SSL_PATH/kibana.crt" >> $KIBANA_CONF
       if [[ -n "${SSL_PASSPHRASE}" ]]; then
-          log "[configure_kibana_yaml] Adding server.ssl.keyPassphrase to kibana.keystore"
-          create_keystore_if_not_exists
-          echo "# server.ssl.keyPassphrase added to kibana.keystore" >> $KIBANA_CONF
-          echo "$SSL_PASSPHRASE" | keystore_cmd add "server.ssl.keyPassphrase" --stdin --force
+          echo "server.ssl.keyPassphrase: \"$SSL_PASSPHRASE\"" >> $KIBANA_CONF
       fi
       log "[configure_kibana_yaml] Configured SSL/TLS to Kibana"
     fi
 
     # configure HTTPS communication with Elasticsearch if cert supplied and x-pack installed.
     # Kibana x-pack installed implies it's also installed for Elasticsearch
-    local INSTALL_CERTS=0
-    if [[ ${INSTALL_XPACK} -ne 0 || ${BASIC_SECURITY} -ne 0 ]]; then
-      INSTALL_CERTS=1
-    fi
-
-    if [[ -n "${HTTP_CERT}" || -n "${HTTP_CACERT}" && ${INSTALL_CERTS} -ne 0 ]]; then
+    if [[ -n "${HTTP_CERT}" || -n "${HTTP_CACERT}" && ${INSTALL_XPACK} -ne 0 ]]; then
       [ -d $SSL_PATH ] || mkdir -p $SSL_PATH
 
       if [[ -n "${HTTP_CERT}" ]]; then
@@ -351,13 +337,27 @@ configure_kibana_yaml()
     # Configure SAML Single-Sign-On
     if [[ -n "$SAML_SP_URI" && ${INSTALL_XPACK} -ne 0 ]]; then
       log "[configure_kibana_yaml] Configuring Kibana for SAML Single-Sign-On"
-        echo "xpack.security.authc.providers.saml.saml1.order: 0" >> $KIBANA_CONF
-        echo "xpack.security.authc.providers.saml.saml1.realm: \"saml_aad\"" >> $KIBANA_CONF
-        echo "xpack.security.authc.providers.saml.saml1.description: \"Log in with Azure\"" >> $KIBANA_CONF
-        echo "xpack.security.authc.providers.saml.saml1.icon: \"logoAzure\"" >> $KIBANA_CONF
-        echo "xpack.security.authc.providers.basic.basic1.order: 1" >> $KIBANA_CONF
       # Allow both saml and basic realms
+      echo "xpack.security.authProviders: [ saml,basic ]" >> $KIBANA_CONF
+      echo "server.xsrf.whitelist: [ /api/security/v1/saml ]" >> $KIBANA_CONF
 
+      local PROTOCOL="`echo $SAML_SP_URI | grep '://' | sed -e's,^\(.*://\).*,\1,g'`"
+      local HOSTNAME_AND_PORT=`echo $SAML_SP_URI | sed -e s,$PROTOCOL,,g`
+      local HOSTNAME=`echo $HOSTNAME_AND_PORT | sed -e s,.*@,,g | cut -d: -f1`
+      local PORT=`echo $HOSTNAME_AND_PORT | grep : | cut -d: -f2`
+      if [[ -z "$PORT" ]]; then
+        if [[ "$PROTOCOL" == "https://" ]]; then
+          PORT=443
+        else
+          PORT=80
+        fi
+      fi
+
+      # Kibana is reached through a Public IP address (or a provided URI)
+      # so needs to be configured with this for SAML SSO
+      echo "xpack.security.public.protocol: ${PROTOCOL%://}" >> $KIBANA_CONF
+      echo "xpack.security.public.hostname: \"${HOSTNAME%/}\"" >> $KIBANA_CONF
+      echo "xpack.security.public.port: ${PORT%/}" >> $KIBANA_CONF
       log "[configure_kibana_yaml] Configured Kibana for SAML Single-Sign-On"
     fi
 
@@ -372,9 +372,6 @@ configure_kibana_yaml()
         SKIP_LINES+="elasticsearch.ssl.ca elasticsearch.ssl.keyPassphrase elasticsearch.ssl.verify "
         SKIP_LINES+="xpack.security.authProviders server.xsrf.whitelist "
         SKIP_LINES+="xpack.security.public.protocol xpack.security.public.hostname xpack.security.public.port "
-        SKIP_LINES+="xpack.security.authc.providers.saml.saml1.order xpack.security.authc.providers.saml.saml1.realm "
-        SKIP_LINES+="xpack.security.authc.providers.saml.saml1.description xpack.security.authc.providers.basic.basic1.order "
-        SKIP_LINES+="xpack.security.authc.providers.saml.saml1.icon "
         local SKIP_REGEX="^\s*("$(echo $SKIP_LINES | tr " " "|" | sed 's/\./\\\./g')")"
         IFS=$'\n'
         for LINE in $(echo -e "$YAML_CONFIGURATION"); do
@@ -394,7 +391,7 @@ configure_kibana_yaml()
         LINT=$(yamllint -d "{extends: relaxed, rules: {key-duplicates: {level: error}}}" $KIBANA_CONF; exit ${PIPESTATUS[0]})
         EXIT_CODE=$?
         log "[configure_kibana_yaml] ran yaml lint (exit code $EXIT_CODE) $LINT"
-        if [[ $EXIT_CODE -ne 0 ]]; then
+        if [ $EXIT_CODE -ne 0 ]; then
             log "[configure_kibana_yaml] errors in yaml configuration. exiting"
             exit 11
         fi
@@ -521,28 +518,28 @@ set_static_dns()
 #    salt-call --local ash.fips_disable
 # }
 
-# kibana_httpd_self_signed_cert()
-# {
-#    #configure self signed ssl cert on httpd for reverse proxy to kibana
-#    if [ "${CONF_APACHE_HTTPD}" -ne 0 ]; then
-#        log "[kibana_httpd_self_signed_cert] Configure kibana for httpd reverse proxy using self signed ssl cert"
-#        bash httpdrevproxyselfsigned.sh -P 5601
-#        systemctl enable httpd
-#        #assumes client node also using self signed cert, configuring if switching which port to connect to es on
-#        echo "elasticsearch.ssl.verify: false" >> /etc/kibana/kibana.yml
-#    fi
-# }
+kibana_httpd_self_signed_cert()
+{
+    #configure self signed ssl cert on httpd for reverse proxy to kibana
+    if [ "${CONF_APACHE_HTTPD}" -ne 0 ]; then
+        log "[kibana_httpd_self_signed_cert] Configure kibana for httpd reverse proxy using self signed ssl cert"
+        bash httpdrevproxyselfsigned.sh -P 5601
+        systemctl enable httpd
+        #assumes client node also using self signed cert, configuring if switching which port to connect to es on
+        echo "elasticsearch.ssl.verify: false" >> /etc/kibana/kibana.yml
+    fi
+}
 
-# kibana_httpd_ldaps_auth()
-# {
-#    #configure kibana httpd for ldaps authentication
-#    if [ "${CONF_APACHE_HTTPD}" -ne 0 ]; then
-#        log "[kibana_httpd_self_signed_cert] Configure kibana for ldaps authentication"
-#        bash kibananodeldapsauth.sh -C "${APACHE_LDAPS_CERT}" -E "${APACHE_ENV_CONTENT_URL}" -G "${APACHE_LDAP_GROUP_DN}"
-#        systemctl enable httpd
-#        systemctl restart httpd
-#    fi
-#}
+kibana_httpd_ldaps_auth()
+{
+    #configure kibana httpd for ldaps authentication
+    if [ "${CONF_APACHE_HTTPD}" -ne 0 ]; then
+        log "[kibana_httpd_self_signed_cert] Configure kibana for ldaps authentication"
+        bash kibananodeldapsauth.sh -C "${APACHE_LDAPS_CERT}" -E "${APACHE_ENV_CONTENT_URL}" -G "${APACHE_LDAP_GROUP_DN}"
+        systemctl enable httpd
+        systemctl restart httpd
+    fi
+}
 
 update_and_reboot_in_2_min()
 {
@@ -597,11 +594,11 @@ start_systemd
 
 set_static_dns
 
-# watchmaker_hardening
+#watchmaker_hardening
 
-#kibana_httpd_self_signed_cert
+kibana_httpd_self_signed_cert
 
-#kibana_httpd_ldaps_auth
+kibana_httpd_ldaps_auth
 
 update_and_reboot_in_2_min
 
