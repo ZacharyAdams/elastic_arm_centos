@@ -594,6 +594,8 @@ start_systemd
 
 set_static_dns
 
+#watchmaker_hardening
+
 kibana_httpd_self_signed_cert
 
 kibana_httpd_ldaps_auth
