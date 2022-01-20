@@ -495,7 +495,7 @@ watchmaker_hardening()
     # Install pip
     yum -y --enablerepo=epel install python-pip wget 
     # Install setup dependencies for python 2.x (removed ver dep for pip, others from readthedocs re 2.6, not sure if applicable to 2.7)
-    pip install --upgrade "pip" "wheel<0.30.0" "setuptools<37"
+    pip install --upgrade "pip==20.3.4" "wheel<0.30.0" "setuptools<37"
     # Install Watchmaker
     pip install --upgrade watchmaker 
     # Setup terminal support for UTF-8
@@ -504,11 +504,11 @@ watchmaker_hardening()
     # Run Watchmaker
     watchmaker --no-reboot --log-level debug --log-dir=/var/log/watchmaker --config=/usr/lib/python2.7/site-packages/watchmaker/static/config.yaml
     if [ $? -ne 0 ]; then
-        log "watchmaker didn't run correctly, exit"
-        exit 1
+        log "watchmaker didn't run correctly"
+    else
+        log "[watchmaker_hardening] disabling fips mode for azure linux agent and extensions"
+        salt-call --local ash.fips_disable
     fi
-    log "[watchmaker_hardening] disabling fips mode for azure linux agent and extensions"
-    salt-call --local ash.fips_disable
 }
 
 update_and_reboot_in_2_min()
