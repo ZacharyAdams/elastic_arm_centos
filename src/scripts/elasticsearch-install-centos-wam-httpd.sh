@@ -1394,7 +1394,5 @@ update_and_reboot_in_2_min
 ELAPSED_TIME=$(($SECONDS - $START_TIME))
 PRETTY=$(printf '%dh:%dm:%ds\n' $(($ELAPSED_TIME/3600)) $(($ELAPSED_TIME%3600/60)) $(($ELAPSED_TIME%60)))
 
-log "Intentional break - debug"
-exit 1
 log "End execution of Elasticsearch script extension on ${HOSTNAME} in ${PRETTY}"
 exit 0
