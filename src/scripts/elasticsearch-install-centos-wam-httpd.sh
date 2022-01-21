@@ -1318,19 +1318,19 @@ update_and_reboot_in_2_min()
 
 # if elasticsearch is already installed assume this is a redeploy
 # change yaml configuration and only restart the server when needed
-# if systemctl -q is-active elasticsearch.service; then
+if systemctl -q is-active elasticsearch.service; then
 
-#   configure_elasticsearch_yaml
+  configure_elasticsearch_yaml
 
-#   # if this is a data node using temp disk, check existence and permissions
-#   check_data_disk
+  # if this is a data node using temp disk, check existence and permissions
+  check_data_disk
 
-#   # restart elasticsearch if the configuration has changed
-#   cmp --silent /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak \
-#     || systemctl reload-or-restart elasticsearch.service
+  # restart elasticsearch if the configuration has changed
+  cmp --silent /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak \
+    || systemctl reload-or-restart elasticsearch.service
 
-#   exit 0
-# fi
+  exit 0
+fi
 
 format_data_disks
 
