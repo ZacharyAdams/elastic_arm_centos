@@ -183,6 +183,12 @@ fi
 # Installation steps as functions
 #########################
 
+random_password()
+{ 
+  < /dev/urandom tr -dc '!@#$%_A-Z-a-z-0-9' | head -c${1:-64}
+  echo
+}
+
 install_kibana()
 {
     local PACKAGE="kibana-$KIBANA_VERSION-x86_64.rpm"
@@ -255,11 +261,10 @@ configure_kibana_yaml()
       echo "elasticsearch.username: kibana" >> $KIBANA_CONF
       echo "elasticsearch.password: \"$USER_KIBANA_PWD\"" >> $KIBANA_CONF
 
-      install_pwgen
-      local ENCRYPTION_KEY=$(pwgen 64 1)
+      local ENCRYPTION_KEY=$(random_password)
       echo "xpack.security.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
       log "[configure_kibana_yaml] X-Pack Security encryption key generated"
-      ENCRYPTION_KEY=$(pwgen 64 1)
+      ENCRYPTION_KEY=$(random_password)
       echo "xpack.reporting.encryptionKey: \"$ENCRYPTION_KEY\"" >> $KIBANA_CONF
       log "[configure_kibana_yaml] X-Pack Reporting encryption key generated"
 
@@ -440,11 +445,6 @@ install_epel()
 install_perl_Digest_SHA()
 {
     install_yum_package perl-Digest-SHA
-}
-
-install_pwgen()
-{
-    install_yum_package pwgen
 }
 
 install_yamllint()
