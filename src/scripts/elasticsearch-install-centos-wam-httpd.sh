@@ -61,6 +61,9 @@ help()
 
     echo "    -s      URL from which to retrieve the name_synonyms.txt file"
 
+    echo "    -c      root URL for retrieving RNI plugin and license"
+    echo "    -t      SAS token needed to retrieve RNI plugin and license"
+
     echo "    -h      view this help content"
 }
 
@@ -154,7 +157,7 @@ SAML_METADATA_URI=""
 SAML_SP_URI=""
 
 #Loop through options passed
-while getopts :n:m:v:A:R:M:K:S:F:Z:p:a:k:L:C:B:E:H:G:T:W:V:J:N:D:O:P:s:xyzldjh optname; do
+while getopts :n:m:v:A:R:M:K:S:F:Z:p:a:k:L:C:B:E:H:G:T:W:V:J:N:D:O:P:s:c:t:xyzldjh optname; do
   log "Option $optname set"
   case $optname in
     n) #set cluster name
@@ -259,6 +262,12 @@ while getopts :n:m:v:A:R:M:K:S:F:Z:p:a:k:L:C:B:E:H:G:T:W:V:J:N:D:O:P:s:xyzldjh o
     s) #name_synonyms.txt url
       NAME_SYNONYMS_URL="${OPTARG}"
       ;;
+    c) #root URL for RNI plugin and license
+      RNI_ROOT_URL="${OPTARG}"
+      ;;
+    t) #SAS token for downloading RNI plugin and license
+      RNI_SAS_TOKEN="${OPTARG}"
+      ;;
     h) #show help
       help
       exit 2
@@ -275,7 +284,8 @@ done
 # Parameter state changes
 #########################
 
-  BASIC_SECURITY=1
+  # Override - requirement
+  BASIC_SECURITY=0
 
 
 
@@ -955,15 +965,17 @@ configure_elasticsearch_yaml()
       echo "azure.client.default.endpoint_suffix: $STORAGE_SUFFIX" >> $ES_CONF
     fi
 
- if [[ ${INSTALL_XPACK} -ne 0 ]]; then
+    if [[ ${INSTALL_XPACK} -ne 0 ]]; then
       log "[configure_elasticsearch_yaml] Set generated license type to trial"
       echo "xpack.license.self_generated.type: trial" >> $ES_CONF
     fi
 
-    if [[ ${INSTALL_XPACK} -ne 0 || ${BASIC_SECURITY} -ne 0 ]]; then
-      log "[configure_elasticsearch_yaml] Set X-Pack Security enabled"
-      echo "xpack.security.enabled: true" >> $ES_CONF
-    fi
+    # ! Override
+    # if [[ ${INSTALL_XPACK} -ne 0 || ${BASIC_SECURITY} -ne 0 ]]; then
+    #   log "[configure_elasticsearch_yaml] Set X-Pack Security enabled"
+    # fi
+    log "[configure_elasticsearch_yaml] MANUAL OVERRIDE - REQUIREMENT - FALSE"
+    echo "xpack.security.enabled: false" >> $ES_CONF
 
     # Additional yaml configuration
     if [[ -n "$YAML_CONFIGURATION" ]]; then
@@ -1188,19 +1200,22 @@ port_forward()
     log "[port_forward] setting up port forwarding from 9201 to 9200"
     #redirects 9201 > 9200 locally
     #this to overcome a limitation in ARM where to vm 2 loadbalancers cannot route on the same backend ports
-    if [ ${INSTALL_XPACK} -eq 0 ]; then
-      #if not installing xpack only port forward for subnet IPs and azure load balancer source
-      log "[port_forward] configuring port forwarding for local subnet and azure load balancer source IPs"
-      thissubnet=$(ip -o -f inet addr show | awk '/scope global/ {print $4}')
-      firewall-cmd --permanent --new-ipset=thissubnetandlb --type=hash:net
-      firewall-cmd --permanent --ipset=thissubnetandlb --add-entry=$thissubnet
-      firewall-cmd --permanent --ipset=thissubnetandlb --add-entry=168.63.129.16
-      firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset="thissubnetandlb" forward-port port="9201" protocol="tcp" to-port="9200"'
-    else 
-      log "[port_forward] configuring port forwarding for all source IPs"
-      firewall-cmd --zone=public --add-masquerade --permanent
-      firewall-cmd --zone=public --add-forward-port=port=9201:proto=tcp:toport=9200 --permanent
-    fi
+
+    # ! Override - setup port forwarding as specified
+    # if [ ${INSTALL_XPACK} -eq 0 ]; then
+    #   #if not installing xpack only port forward for subnet IPs and azure load balancer source
+    #   log "[port_forward] configuring port forwarding for local subnet and azure load balancer source IPs"
+    #   thissubnet=$(ip -o -f inet addr show | awk '/scope global/ {print $4}')
+    #   firewall-cmd --permanent --new-ipset=thissubnetandlb --type=hash:net
+    #   firewall-cmd --permanent --ipset=thissubnetandlb --add-entry=$thissubnet
+    #   firewall-cmd --permanent --ipset=thissubnetandlb --add-entry=168.63.129.16
+    #   firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset="thissubnetandlb" forward-port port="9201" protocol="tcp" to-port="9200"'
+    # else 
+    log "[port_forward] configuring port forwarding for all source IPs"
+    firewall-cmd --zone=public --add-masquerade --permanent
+    firewall-cmd --zone=public --add-forward-port=port=9201:proto=tcp:toport=9200 --permanent
+    
+    # fi
     #iptables -t nat -I PREROUTING -p tcp --dport 9201 -j REDIRECT --to-ports 9200
     #iptables -t nat -I OUTPUT -p tcp -o lo --dport 9201 -j REDIRECT --to-ports 9200
 
@@ -1229,28 +1244,35 @@ firewall_ports()
     log "[firewall_ports] starting and enabling firewalld"
     systemctl start firewalld.service
     systemctl enable firewalld.service
+
     if [ ${DATA_ONLY_NODE} -ne 1 ]; then
-      if [ ${INSTALL_XPACK} -eq 0 ]; then
-        #is not installing xpack only open firewall port for subnet IPs and azure load balancer
-        log "[firewall_ports] setting up firewall ports for data nodes from subnet and azure load balancer source IPs"
-        firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset=thissubnetandlb port protocol="tcp" port="9300" accept'
-      else 
+    # ! Override
+    #   if [ ${INSTALL_XPACK} -eq 0 ]; then
+    #     #is not installing xpack only open firewall port for subnet IPs and azure load balancer
+    #     log "[firewall_ports] setting up firewall ports for data nodes from subnet and azure load balancer source IPs"
+    #     firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset=thissubnetandlb port protocol="tcp" port="9300" accept'
+    #   else 
         log "[firewall_ports] setting up firewall ports for data nodes from all source IPs"
         firewall-cmd --zone=public --permanent --add-port=9300/tcp
         firewall-cmd --zone=public --add-port=9300/tcp
-      fi
+        firewall-cmd --zone=public --permanent --add-port=4118/tcp
+        firewall-cmd --zone=public --add-port=4118/tcp
     fi
+    # fi
     if [ ${CLIENT_ONLY_NODE} -eq 1 ]; then
-      if [ ${INSTALL_XPACK} -eq 0 ]; then
-        #is not installing xpack only open firewall port for subnet IPs and azure load balancer
-        log "[firewall_ports] setting up firewall ports for client nodes from subnet and azure load balancer source IPs"
-        firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset=thissubnetandlb port protocol="tcp" port="9200" accept'
-      else
+    # ! Override
+    #   if [ ${INSTALL_XPACK} -eq 0 ]; then
+    #     #is not installing xpack only open firewall port for subnet IPs and azure load balancer
+    #     log "[firewall_ports] setting up firewall ports for client nodes from subnet and azure load balancer source IPs"
+    #     firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source ipset=thissubnetandlb port protocol="tcp" port="9200" accept'
+    #   else
         log "[firewall_ports] setting up firewall ports for client nodes from all source IPs"
         firewall-cmd --zone=public --permanent --add-port=9200/tcp
         firewall-cmd --zone=public --add-port=9200/tcp
-      fi
+        firewall-cmd --zone=public --permanent --add-service=https
     fi
+    # fi
+    firewall-cmd --reload
     log "[firewall_ports] firewall ports configured"
 }
 
@@ -1314,6 +1336,44 @@ update_and_reboot_in_2_min()
     at now + 2 minutes -f /root/update.sh
 }
 
+rni_plugin()
+{
+    log "[rni_plugin] initiating download and installation of RNI plugin"
+    
+    local PLUGIN_FILE="rni-es-7.11.2.1.zip"
+    local LICENSE_FILE="rlp-license.xml"
+    local DOWNLOAD_URL=""
+
+    # Download main ZIP package
+    # TODO: Need to know how we intend to handle this - storage group?
+    ## Append / if necessary to the root URL
+    if [ "${RNI_ROOT_URL: -1}" != "/" ]; then
+        RNI_ROOT_URL+="/"
+    fi
+    ## Build URL based on filename and SAS token
+    DOWNLOAD_URL="${RNI_ROOT_URL}${PLUGIN_FILE}"
+    DOWNLOAD_URL+="?${RNI_SAS_TOKEN}"
+    ## Download file to /tmp
+    wget $DOWNLOAD_URL -O "/tmp/${PLUGIN_FILE}"
+
+    # Install plugin
+    # TODO: Determine if /tmp is appropriate - this is a 4.25 GB file
+    /usr/share/elasticsearch/bin/elasticsearch-plugin install file:///tmp/${PLUGIN_FILE} --batch
+
+    # Remove file
+    rm -f /tmp/${PLUGIN_FILE}
+
+    # Download license file to plugin location
+    # TODO: Need to know how we intend to handle this - storage group?
+    ## Build URL based on filename and SAS token
+    DOWNLOAD_URL="${RNI_ROOT_URL}${LICENSE_FILE}"
+    DOWNLOAD_URL+="?${RNI_SAS_TOKEN}"
+    ## Download file to /usr/share/elasticsearch/plugins/rni/bt_root/rlp/rlp/licenses
+    wget $DOWNLOAD_URL -O "/usr/share/elasticsearch/plugins/rni/bt_root/rlp/rlp/licenses/${LICENSE_FILE}"
+    
+    log "[rni_plugin] complete"
+}
+
 #########################
 # Installation sequence
 #########################
@@ -1374,6 +1434,8 @@ configure_os_properties
 port_forward
 
 get_name_synonyms
+
+rni_plugin
 
 firewall_ports
 
