@@ -149,7 +149,7 @@
             "fileUris": "[variables('centosScripts')]"
           },
           "protectedSettings": {
-            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /usr/bin/growpart /dev/sda 2 && pvresize /dev/sda2 && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl mask tmp.mount1 && echo \"shutdown -r now\" | at now + 1 minutes)]"
+            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /usr/bin/growpart /dev/sda 2 && pvresize /dev/sda2 && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl mask tmp.mount1 && echo \"shutdown -r now\" | at now + 1 minutes')]"
           }
         },
         "data": {
@@ -161,7 +161,7 @@
             "fileUris": "[variables('centosScripts')]"
           },
           "protectedSettings": {
-            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /usr/bin/growpart /dev/sda 2 && pvresize /dev/sda2 && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl mask tmp.mount1 && echo \"shutdown -r now\" | at now + 1 minutes)]"
+            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /usr/bin/growpart /dev/sda 2 && pvresize /dev/sda2 && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl mask tmp.mount1 && echo \"shutdown -r now\" | at now + 1 minutes')]"
           }
         },
         "kibana": {
