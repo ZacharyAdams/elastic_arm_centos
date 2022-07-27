@@ -1354,14 +1354,14 @@ rni_plugin()
     DOWNLOAD_URL="${RNI_ROOT_URL}${PLUGIN_FILE}"
     DOWNLOAD_URL+="?${RNI_SAS_TOKEN}"
     ## Download file to /tmp
-    wget $DOWNLOAD_URL -O "/tmp/${PLUGIN_FILE}"
+    wget $DOWNLOAD_URL -O "/mnt/${PLUGIN_FILE}"
 
     # Install plugin
     # TODO: Determine if /tmp is appropriate - this is a 4.25 GB file
-    /usr/share/elasticsearch/bin/elasticsearch-plugin install file:///tmp/${PLUGIN_FILE} --batch
+    /usr/share/elasticsearch/bin/elasticsearch-plugin install file:///mnt/${PLUGIN_FILE} --batch
 
     # Remove file
-    rm -f /tmp/${PLUGIN_FILE}
+    rm -f /mnt/${PLUGIN_FILE}
 
     # Download license file to plugin location
     # TODO: Need to know how we intend to handle this - storage group?
