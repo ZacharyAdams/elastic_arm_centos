@@ -137,7 +137,7 @@
             "fileUris": "[variables('centosScripts')]"
           },
           "protectedSettings": {
-            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && bash elasticsearch-install-centos-wam-httpd.sh -x', variables('commonShortOpts'), variables('commonInstallParams'))]"
+            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget at', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && bash elasticsearch-install-centos-wam-httpd.sh -x', variables('commonShortOpts'), variables('commonInstallParams'))]"
           }
         },
         "client": {
@@ -149,7 +149,7 @@
             "fileUris": "[variables('centosScripts')]"
           },
           "protectedSettings": {
-            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /sbin/service auditd stop && sleep 5 && umount /var/log/audit && e2fsck -fy /dev/VolGroup00/auditVol && resize2fs /dev/VolGroup00/auditVol 5G && lvreduce -L 5G /dev/VolGroup00/auditVol -f && mount -a && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl unmask tmp.mount && systemctl disable tmp.mount && echo \"shutdown -r now\" | at now + 1 minutes')]"
+            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget at', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /sbin/service auditd stop && sleep 5 && umount /var/log/audit && e2fsck -fy /dev/VolGroup00/auditVol && resize2fs /dev/VolGroup00/auditVol 5G && lvreduce -L 5G /dev/VolGroup00/auditVol -f && mount -a && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl unmask tmp.mount && systemctl disable tmp.mount && echo \"shutdown -r now\" | at now + 1 minutes')]"
           }
         },
         "data": {
@@ -161,7 +161,7 @@
             "fileUris": "[variables('centosScripts')]"
           },
           "protectedSettings": {
-            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /sbin/service auditd stop && sleep 5 && umount /var/log/audit && e2fsck -fy /dev/VolGroup00/auditVol && resize2fs /dev/VolGroup00/auditVol 5G && lvreduce -L 5G /dev/VolGroup00/auditVol -f && mount -a && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl unmask tmp.mount && systemctl disable tmp.mount && echo \"shutdown -r now\" | at now + 1 minutes')]"
+            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget at', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustESWAMPrep'), ' && /sbin/service auditd stop && sleep 5 && umount /var/log/audit && e2fsck -fy /dev/VolGroup00/auditVol && resize2fs /dev/VolGroup00/auditVol 5G && lvreduce -L 5G /dev/VolGroup00/auditVol -f && mount -a && lvresize -r -l 100%FREE VolGroup00/rootVol && systemctl unmask tmp.mount && systemctl disable tmp.mount && echo \"shutdown -r now\" | at now + 1 minutes')]"
           }
         },
         "kibana": {
@@ -173,7 +173,7 @@
             "fileUris": "[variables('centosScripts')]"
           },
           "protectedSettings": {
-            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustKibWAMPrep'))]"
+            "commandToExecute": "[concat('#!/bin/bash\n\nyum -y install wget at', variables('installTrendParamValue'), variables('installNessusParamValue'), ' && ', variables('adjustSetStaticDNSScript'), ' && ', variables('CustKibWAMPrep'))]"
           }
         },
         "logstash": {
